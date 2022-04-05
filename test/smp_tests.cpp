@@ -1,77 +1,20 @@
-
-
 #include <iostream>
 
 #include <smp/smp.hpp>
+
 using namespace smp;
-// using namespace smp::placeholders;
 
-template <typename T>
-void print()
-{
-  std::cout << typeid(T).name() << std::endl;
-}
+using L1 = std::tuple<void, int, float, void, int>;
+using L2 = std::tuple<char[1], char[2], char[3], char[4], char[5]>;
 
-template <typename T>
-using add_one = m_size_t<T::value + 1>;
+template <class T1, class T2>
+using first_is_void = std::is_same<T1, void>;
+template <class T1, class T2>
+using second = T2;
 
-template <typename T>
-using multiply_two = m_size_t<T::value * 2>;
-
-template <typename T>
-using subtract_one = m_size_t<T::value - 1>;
-
-template <typename T>
-using multiple_four = m_size_t<T::value * 4>;
-
-using add_one_and_multiply_two = m_compose<add_one, multiply_two, subtract_one, multiple_four>;
-
-struct S {
-  template <typename I>
-  constexpr void operator()(I) const
-  {
-  }
-};
+using R1 = m_transform_if<first_is_void, second, L1, L2>;
 
 int main()
 {
-
-  using L1 = m_list<int, double, float>;
-
-  using L2 = m_replace_first<L1, std::string>;
-
-  using Result = m_invoke_q<add_one_and_multiply_two, m_size_t<0>>;
-
-  using DoubleIdx = m_find<L1, std::string>;
-
-  static_assert(DoubleIdx::value == 3, "");
-
-  constexpr auto const* name = m_type_name<int>();
-  std::cout << std::string(name).size() << std::endl;
-
-  std::cout << name << std::endl;
-
-  std::cout << name << std::endl;
-
-  using Map = m_map<m_list<int>, m_list<double>>;
-  using Map2 = m_map_insert<Map, int>;
-
-  using MapHasInt = m_map_contains<Map2, std::string>;
-
-  std::cout << m_type_name<m_map_get<m_map_insert<Map2, std::string, int, int, int>, std::string>>() << std::endl;
-  int y = 5;
-  std::cout << m_table_invoke<10>(
-                   5,
-                   [&y](auto I)
-                   {
-                     using L = m_size_t<I>;
-                     std::cout << m_type_name<L>() << std::endl;
-                     y = 10;
-                     return 10;
-                   })
-            << std::endl;
-
-  std::cout << y << std::endl;
-
-  //  std::cout << "Name: " << name << "\nWorld size: " << world_size << "\nWorld index: " << world_index << std::endl;
+  std::cout << m_type_name<R1>() << std::endl;
 }

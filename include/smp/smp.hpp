@@ -701,6 +701,57 @@ using m_find_if_q = m_find_if<L, Q::template invoke>;
 template <typename L, typename T>
 using m_find = m_find_if_q<L, detail::m_is_same_as<T>>;
 
+namespace detail
+{
+
+template <typename, typename>
+struct m_transform_args;
+
+template <typename... Ls, std::size_t I>
+struct m_transform_args<m_list<Ls...>, m_size_t<I>> {
+  using type = m_list<m_at_c<Ls, I>...>;
+};
+
+template <typename, template <typename...> class Fn, typename... Ls>
+struct m_transform_impl;
+
+template <std::size_t... Is, template <typename...> class Fn, typename... Ls>
+struct m_transform_impl<std::index_sequence<Is...>, Fn, Ls...> {
+  using type = m_list<m_apply<Fn, m_t_<m_transform_args<m_list<Ls...>, m_size_t<Is>>>>...>;
+};
+
+template <typename, template <typename...> class C, template <typename...> class Fn, typename... Ls>
+struct m_transform_impl_if;
+
+template <std::size_t... Is, template <typename...> class C, template <typename...> class Fn, typename... Ls>
+struct m_transform_impl_if<std::index_sequence<Is...>, C, Fn, Ls...> {
+
+  template <std::size_t I>
+  using arg_list = m_t_<m_transform_args<m_list<Ls...>, m_size_t<I>>>;
+
+  using type = m_list<m_eval_if<
+      m_apply<C, arg_list<Is>>,
+      m_at_c<m_at_c<m_list<Ls...>, 0>, Is>,
+      m_apply_q,
+      m_quote<Fn>,
+      arg_list<Is>>...>;
+};
+}  // namespace detail
+
+template <template <typename...> class Fn, typename L, typename... Ls>
+using m_transform =
+    m_assign<L, m_t_<detail::m_transform_impl<std::make_index_sequence<m_size<L>::value>, Fn, L, Ls...>>>;
+
+template <typename Q, typename L, typename... Ls>
+using m_transform_q = m_transform<Q::template invoke, L, Ls...>;
+
+template <template <typename...> class C, template <typename...> class Fn, typename L, typename... Ls>
+using m_transform_if =
+    m_assign<L, m_t_<detail::m_transform_impl_if<std::make_index_sequence<m_size<L>::value>, C, Fn, L, Ls...>>>;
+
+template <typename Qc, typename Qt, typename L, typename... Ls>
+using m_transform_if_q = m_transform_if<Qc::template invoke, Qt::template invoke, L, Ls...>;
+
 // Algorithms end ------------------------------------------------------------------------
 
 // Bind begin ----------------------------------------------------------------------------
@@ -835,8 +886,8 @@ template <typename>
 struct m_is_map : m_false {
 };
 
-template <typename K, typename V>
-struct m_is_map<detail::m_map_key_value<K, V>> : m_true {
+template <typename... Ts>
+struct m_is_map<detail::m_map_impl<Ts...>> : m_true {
 };
 
 template <typename... Ts>
@@ -847,6 +898,9 @@ using m_map_contains = detail::m_base_of<m_identity<Key>, m_assign<m_inherit<>, 
 
 template <typename Map, typename Key, typename... Values>
 using m_map_insert = m_eval_unless<m_map_contains<Map, Key>, Map, m_push_back, Map, m_list<Key, Values...>>;
+
+template <typename Map, typename Key, typename... Values>
+using m_map_replace = m_eval_unless<m_map_contains<Map, Key>, Map, m_push_back, Map, m_list<Key, Values...>>;
 
 template <typename Map, typename Key>
 using m_map_get = m_t_<detail::m_map_get_impl<Map, Key>>;

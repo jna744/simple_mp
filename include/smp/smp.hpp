@@ -736,6 +736,7 @@ struct m_transform_impl_if<std::index_sequence<Is...>, C, Fn, Ls...> {
       m_quote<Fn>,
       arg_list<Is>>...>;
 };
+
 }  // namespace detail
 
 template <template <typename...> class Fn, typename L, typename... Ls>

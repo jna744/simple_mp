@@ -736,20 +736,23 @@ struct m_transform_impl<std::index_sequence<Is...>, Fn, Ls...> {
 };
 
 template <typename, template <typename...> class C, template <typename...> class Fn, typename... Ls>
-struct m_transform_impl_if;
+struct m_transform_if_impl;
 
 template <std::size_t... Is, template <typename...> class C, template <typename...> class Fn, typename... Ls>
-struct m_transform_impl_if<std::index_sequence<Is...>, C, Fn, Ls...> {
+struct m_transform_if_impl<std::index_sequence<Is...>, C, Fn, Ls...> {
 
   template <std::size_t I>
   using arg_list = m_t_<m_transform_args<m_list<Ls...>, m_size_t<I>>>;
 
-  using type = m_list<m_eval_if<
-      m_to_bool<m_apply<C, arg_list<Is>>>,
-      m_at<m_first<m_list<Ls...>>, m_size_t<Is>>,
-      m_apply_q,
-      m_quote<Fn>,
-      arg_list<Is>>...>;
+  using fn = m_quote<Fn>;
+
+  template <typename I>
+  using t_yes = m_defer<m_apply_q, fn, arg_list<I::value>>;
+
+  template <typename I>
+  using t_no = m_defer<m_at, m_first<m_list<Ls...>>, I>;
+
+  using type = m_list<m_t_<m_if<m_to_bool<m_apply<C, arg_list<Is>>>, t_yes<m_size_t<Is>>, t_no<m_size_t<Is>>>>...>;
 };
 
 }  // namespace detail
@@ -763,7 +766,7 @@ using m_transform_q = m_transform<Q::template invoke, L, Ls...>;
 
 template <template <typename...> class C, template <typename...> class Fn, typename L, typename... Ls>
 using m_transform_if =
-    m_assign<L, m_t_<detail::m_transform_impl_if<std::make_index_sequence<m_size<L>::value>, C, Fn, L, Ls...>>>;
+    m_assign<L, m_t_<detail::m_transform_if_impl<std::make_index_sequence<m_size<L>::value>, C, Fn, L, Ls...>>>;
 
 template <typename Qc, typename Qt, typename L, typename... Ls>
 using m_transform_if_q = m_transform_if<Qc::template invoke, Qt::template invoke, L, Ls...>;

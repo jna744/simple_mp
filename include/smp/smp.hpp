@@ -347,6 +347,9 @@ template <typename... Ts>
 struct m_inherit : Ts... {
 };
 
+template <typename T>
+auto m_declval() -> std::add_rvalue_reference_t<T>;
+
 namespace detail
 {
 
@@ -850,7 +853,7 @@ using m_map_get = m_t_<detail::m_map_get_impl<Map, Key>>;
 
 // Map end -------------------------------------------------------------------------------
 
-// Static string begin -------------------------------------------------------------------
+// Type name begin -----------------------------------------------------------------------
 
 namespace detail
 {
@@ -905,8 +908,7 @@ struct m_string {
       return m_string_npos;
     CharT const*       first = value + pos;
     CharT const* const last = value + N;
-    std::size_t const  o_size = count;
-    for (auto remaining = N - pos; remaining >= o_size; remaining = last - ++first) {
+    for (auto remaining = N - pos; remaining >= count; remaining = last - ++first) {
       if (!(first = Traits::find(first, remaining - count + 1, s[0])))
         return m_string_npos;
 
@@ -980,6 +982,67 @@ inline constexpr char const* m_type_name() noexcept
   constexpr auto& name = detail::m_construct_type_name<T>::value;
   return name.value;
 }
+
+// Typename end --------------------------------------------------------------------------
+
+// Function table begin ------------------------------------------------------------------
+
+namespace detail
+{
+
+template <typename>
+struct m_fn_type_impl;
+
+template <typename Return, typename... Args>
+struct m_fn_type_impl<Return(Args...)> {
+  using type = Return (*)(Args...);
+};
+
+template <typename T>
+using m_fn_type = m_t_<m_fn_type_impl<T>>;
+
+template <typename Signature, typename... Functions>
+struct m_fn_table {
+  using fn_type = m_fn_type<Signature>;
+  static constexpr fn_type table[]{{&Functions::invoke}...};
+};
+
+template <typename Signature, typename... Functions>
+constexpr m_fn_type<Signature> m_fn_table<Signature, Functions...>::table[];
+
+template <std::size_t I, typename Function, typename Return, typename... Args>
+struct m_table_fn_wrap {
+  static constexpr Return invoke(Function function, Args... args)
+  {
+    return Function{std::move(function)}(m_size_t<I>{}, std::forward<Args>(args)...);
+  }
+};
+
+template <typename Function, typename... Args, std::size_t... Is>
+constexpr auto m_construct_fn_table_impl(std::index_sequence<Is...>)
+{
+  using fn_ret_type = decltype(m_declval<Function>()(m_size_t<0>{}, m_declval<Args>()...));
+  using fns = m_list<m_table_fn_wrap<Is, Function, fn_ret_type, Args...>...>;
+  using table = m_apply<m_fn_table, m_push_front<fns, fn_ret_type(Function, Args...)>>;
+  return table{};
+}
+
+template <std::size_t I, typename Function, typename... Args>
+struct m_construct_fn_table {
+  using table_type = decltype(m_construct_fn_table_impl<Function, Args...>(std::make_index_sequence<I>{}));
+  static constexpr table_type value = m_construct_fn_table_impl<Function, Args...>(std::make_index_sequence<I>{});
+};
+
+}  // namespace detail
+
+template <std::size_t Size, typename Function, typename... Args>
+constexpr decltype(auto) m_table_invoke(std::size_t index, Function&& function, Args&&... args)
+{
+  constexpr auto& table = detail::m_construct_fn_table<Size, Function, Args&&...>::value.table;
+  return table[index](std::forward<Function>(function), std::forward<Args>(args)...);
+}
+
+// Function table end --------------------------------------------------------------------
 
 }  // namespace smp
 

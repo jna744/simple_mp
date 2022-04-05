@@ -26,6 +26,13 @@ using multiple_four = m_size_t<T::value * 4>;
 
 using add_one_and_multiply_two = m_compose<add_one, multiply_two, subtract_one, multiple_four>;
 
+struct S {
+  template <typename I>
+  constexpr void operator()(I) const
+  {
+  }
+};
+
 int main()
 {
 
@@ -52,6 +59,19 @@ int main()
   using MapHasInt = m_map_contains<Map2, std::string>;
 
   std::cout << m_type_name<m_map_get<m_map_insert<Map2, std::string, int, int, int>, std::string>>() << std::endl;
+  int y = 5;
+  std::cout << m_table_invoke<10>(
+                   5,
+                   [&y](auto I)
+                   {
+                     using L = m_size_t<I>;
+                     std::cout << m_type_name<L>() << std::endl;
+                     y = 10;
+                     return 10;
+                   })
+            << std::endl;
+
+  std::cout << y << std::endl;
 
   //  std::cout << "Name: " << name << "\nWorld size: " << world_size << "\nWorld index: " << world_index << std::endl;
 }

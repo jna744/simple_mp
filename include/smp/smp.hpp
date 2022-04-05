@@ -744,15 +744,14 @@ struct m_transform_if_impl<std::index_sequence<Is...>, C, Fn, Ls...> {
   template <std::size_t I>
   using arg_list = m_t_<m_transform_args<m_list<Ls...>, m_size_t<I>>>;
 
-  using fn = m_quote<Fn>;
+  template <typename I>
+  using t_yes = m_apply<Fn, arg_list<I::value>>;
 
   template <typename I>
-  using t_yes = m_defer<m_apply_q, fn, arg_list<I::value>>;
+  using t_no = m_at<m_first<m_list<Ls...>>, I>;
 
-  template <typename I>
-  using t_no = m_defer<m_at, m_first<m_list<Ls...>>, I>;
-
-  using type = m_list<m_t_<m_if<m_to_bool<m_apply<C, arg_list<Is>>>, t_yes<m_size_t<Is>>, t_no<m_size_t<Is>>>>...>;
+  using type = m_list<
+      m_t_<m_if<m_to_bool<m_apply<C, arg_list<Is>>>, m_defer<t_yes, m_size_t<Is>>, m_defer<t_no, m_size_t<Is>>>>...>;
 };
 
 }  // namespace detail

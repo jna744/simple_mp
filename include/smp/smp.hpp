@@ -712,6 +712,21 @@ struct m_transform_args<m_list<Ls...>, m_size_t<I>> {
   using type = m_list<m_at_c<Ls, I>...>;
 };
 
+template <typename... Ls>
+struct m_transform_args<m_list<Ls...>, m_size_t<0>> {
+  using type = m_list<m_first<Ls>...>;
+};
+
+template <typename... Ls>
+struct m_transform_args<m_list<Ls...>, m_size_t<1>> {
+  using type = m_list<m_second<Ls>...>;
+};
+
+template <typename... Ls>
+struct m_transform_args<m_list<Ls...>, m_size_t<2>> {
+  using type = m_list<m_third<Ls>...>;
+};
+
 template <typename, template <typename...> class Fn, typename... Ls>
 struct m_transform_impl;
 
@@ -730,8 +745,8 @@ struct m_transform_impl_if<std::index_sequence<Is...>, C, Fn, Ls...> {
   using arg_list = m_t_<m_transform_args<m_list<Ls...>, m_size_t<I>>>;
 
   using type = m_list<m_eval_if<
-      m_apply<C, arg_list<Is>>,
-      m_at_c<m_at_c<m_list<Ls...>, 0>, Is>,
+      m_to_bool<m_apply<C, arg_list<Is>>>,
+      m_at<m_first<m_list<Ls...>>, m_size_t<Is>>,
       m_apply_q,
       m_quote<Fn>,
       arg_list<Is>>...>;

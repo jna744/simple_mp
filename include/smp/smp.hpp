@@ -4,6 +4,38 @@
 #include <type_traits>
 #include <utility>
 
+#if __cplusplus >= 201703L
+#define SMP_CPP_VERSION 17
+#elif __cplusplus >= 201402L
+#define SMP_CPP_VERSION 14
+#else
+// TODO: not portable
+#warning "smp requires at least c++14"
+#endif
+
+#if defined __GNUC__
+#define SMP_LIKELY__(EXPR) __builtin_expect(!!(EXPR), 1)
+#else
+#define SMP_LIKELY__(EXPR) (!!(EXPR))
+#endif
+
+#if defined NDEBUG
+#define SMP_ASSERT(CHECK) void(0)
+#else
+#include <cassert>
+#define SMP_ASSERT(CHECK) (SMP_LIKELY__(CHECK) ? void(0) : [] { assert(!#CHECK); }())
+#endif
+
+#define SMP_CPP(version) version == SMP_CPP_VERSION
+
+#if SMP_CPP(14)
+#define SMP_INLINE_17
+#else
+#define SMP_INLINE_17 inline
+#endif
+
+#define SMP_INLINE(cpp_version) SMP_INLINE_##cpp_version
+
 namespace smp
 {
 
@@ -998,8 +1030,7 @@ struct m_char_traits {
   }
 };
 
-// TODO: inline in cpp17
-constexpr auto m_string_npos = std::size_t(-1);
+SMP_INLINE(17) constexpr auto m_string_npos = std::size_t(-1);
 
 struct m_string_exception {
 };
@@ -1085,11 +1116,13 @@ inline constexpr auto m_construct_type_name_impl()
 template <typename T>
 struct m_construct_type_name {
   using type = decltype(m_construct_type_name_impl<T>());
-  static constexpr type value = m_construct_type_name_impl<T>();
+  static SMP_INLINE(17) constexpr type value = m_construct_type_name_impl<T>();
 };
 
+#if SMP_CPP(14)
 template <typename T>
 constexpr typename m_construct_type_name<T>::type m_construct_type_name<T>::value;
+#endif
 
 }  // namespace detail
 
@@ -1120,11 +1153,13 @@ using m_fn_table_ptr = m_t_<m_fn_table_ptr_impl<T>>;
 
 template <typename Signature, typename... Functions>
 struct m_fn_table {
-  static constexpr m_fn_table_ptr<Signature> table[]{{&Functions::invoke}...};
+  static SMP_INLINE(17) constexpr m_fn_table_ptr<Signature> table[]{{&Functions::invoke}...};
 };
 
+#if SMP_CPP(14)
 template <typename Signature, typename... Functions>
 constexpr m_fn_table_ptr<Signature> m_fn_table<Signature, Functions...>::table[];
+#endif
 
 template <std::size_t I, typename Function, typename Return, typename... Args>
 struct m_table_fn_wrap {
@@ -1146,8 +1181,9 @@ inline constexpr auto& m_construct_fn_table(std::index_sequence<Is...>)
 }  // namespace detail
 
 template <std::size_t Size, typename Function, typename... Args>
-inline constexpr decltype(auto) m_table_invoke(std::size_t index, Function&& function, Args&&... args)
+inline constexpr decltype(auto) m_vtable_invoke(std::size_t index, Function&& function, Args&&... args)
 {
+  SMP_ASSERT(index < Size);
   constexpr auto& table = detail::m_construct_fn_table<Function&&, Args&&...>(std::make_index_sequence<Size>{});
   return table[index](std::forward<Function>(function), std::forward<Args>(args)...);
 }
@@ -1155,5 +1191,12 @@ inline constexpr decltype(auto) m_table_invoke(std::size_t index, Function&& fun
 // Function table end --------------------------------------------------------------------
 
 }  // namespace smp
+
+#undef SMP_CPP_VERSION
+#undef SMP_LIKELY__
+#undef SMP_ASSERT
+#undef SMP_CPP
+#undef SMP_INLINE_17
+#undef SMP_INLINE
 
 #endif  // SMP_SMP_HPP

@@ -1133,26 +1133,20 @@ struct m_table_fn_wrap {
 };
 
 template <typename Function, typename... Args, std::size_t... Is>
-inline constexpr auto m_construct_fn_table_impl(std::index_sequence<Is...>)
+inline constexpr auto& m_construct_fn_table(std::index_sequence<Is...>)
 {
   using fn_ret_type = decltype(m_declval<Function>()(m_size_t<0>{}, m_declval<Args>()...));
   using fns = m_list<m_table_fn_wrap<Is, Function, fn_ret_type, Args...>...>;
-  using table = m_apply<m_fn_table, m_push_front<fns, fn_ret_type(Function, Args...)>>;
-  return table{};
+  using table_container = m_apply<m_fn_table, m_push_front<fns, fn_ret_type(Function, Args...)>>;
+  return table_container::table;
 }
-
-template <std::size_t I, typename Function, typename... Args>
-struct m_construct_fn_table {
-  using table_type = decltype(m_construct_fn_table_impl<Function, Args...>(std::make_index_sequence<I>{}));
-  static constexpr table_type value = m_construct_fn_table_impl<Function, Args...>(std::make_index_sequence<I>{});
-};
 
 }  // namespace detail
 
 template <std::size_t Size, typename Function, typename... Args>
 inline constexpr decltype(auto) m_table_invoke(std::size_t index, Function&& function, Args&&... args)
 {
-  constexpr auto& table = detail::m_construct_fn_table<Size, Function&&, Args&&...>::value.table;
+  constexpr auto& table = detail::m_construct_fn_table<Function&&, Args&&...>(std::make_index_sequence<Size>{});
   return table[index](std::forward<Function>(function), std::forward<Args>(args)...);
 }
 

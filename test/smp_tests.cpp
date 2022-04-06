@@ -24,4 +24,6 @@ int main()
 
   std::cout << m_type_name<IsUnique>() << std::endl;
   std::cout << m_type_name<L1U>() << std::endl;
+
+  m_table_invoke<10>(5, [](auto I) {});
 }

@@ -515,6 +515,9 @@ using m_compose = detail::m_compose_impl<Functions...>;
 template <typename Base, typename Derived>
 using m_base_of = std::is_base_of<Base, Derived>;
 
+template <typename T>
+using m_remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
+
 namespace detail
 {
 
@@ -1105,30 +1108,29 @@ namespace detail
 {
 
 template <typename>
-struct m_fn_type_impl;
+struct m_fn_table_ptr_impl;
 
 template <typename Return, typename... Args>
-struct m_fn_type_impl<Return(Args...)> {
+struct m_fn_table_ptr_impl<Return(Args...)> {
   using type = Return (*)(Args...);
 };
 
 template <typename T>
-using m_fn_type = m_t_<m_fn_type_impl<T>>;
+using m_fn_table_ptr = m_t_<m_fn_table_ptr_impl<T>>;
 
 template <typename Signature, typename... Functions>
 struct m_fn_table {
-  using fn_type = m_fn_type<Signature>;
-  static constexpr fn_type table[]{{&Functions::invoke}...};
+  static constexpr m_fn_table_ptr<Signature> table[]{{&Functions::invoke}...};
 };
 
 template <typename Signature, typename... Functions>
-constexpr m_fn_type<Signature> m_fn_table<Signature, Functions...>::table[];
+constexpr m_fn_table_ptr<Signature> m_fn_table<Signature, Functions...>::table[];
 
 template <std::size_t I, typename Function, typename Return, typename... Args>
 struct m_table_fn_wrap {
   static constexpr Return invoke(Function function, Args... args)
   {
-    return std::forward<Function&&>(function)(m_size_t<I>{}, std::forward<Args>(args)...);
+    return std::forward<Function>(function)(m_size_t<I>{}, std::forward<Args>(args)...);
   }
 };
 

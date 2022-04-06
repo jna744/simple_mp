@@ -17,15 +17,11 @@ using R1 = m_transform_if<first_is_void, second, L1, L2>;
 int main()
 {
 
-  using Map = m_map<>;
+  using L1 = m_list<int, double, int, int, float, double>;
+  using L1U = m_make_unique<L1>;
 
-  using Map1 = m_map_insert<Map, int, double, float, std::string>;
-  using Map2 = m_map_insert<Map1, double, int>;
-  using Map3 = m_map_insert<Map2, std::string, int>;
-  using Map4 = m_map_replace<Map3, int>;
+  using IsUnique = m_is_unique<L1>;
 
-  std::cout << m_type_name<Map4>() << std::endl;
-  int x = 5;
-  m_table_invoke<10>(5, [&x](auto I) { x = 10; });
-  std::cout << x << std::endl;
+  std::cout << m_type_name<IsUnique>() << std::endl;
+  std::cout << m_type_name<L1U>() << std::endl;
 }

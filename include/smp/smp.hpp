@@ -512,6 +512,9 @@ using m_compose = detail::m_compose_impl<Functions...>;
 
 // Helper functions begin ----------------------------------------------------------------
 
+template <typename Base, typename Derived>
+using m_base_of = std::is_base_of<Base, Derived>;
+
 namespace detail
 {
 
@@ -770,6 +773,39 @@ using m_transform_if =
 template <typename Qc, typename Qt, typename L, typename... Ls>
 using m_transform_if_q = m_transform_if<Qc::template invoke, Qt::template invoke, L, Ls...>;
 
+namespace detail
+{
+
+template <typename L, typename U>
+struct m_is_unique_impl {
+  using type = m_true;
+};
+
+template <typename T, typename... Ts, typename U>
+struct m_is_unique_impl<m_list<T, Ts...>, U> : m_if<
+                                                   m_base_of<m_identity<T>, U>,
+                                                   m_identity<m_false>,
+                                                   m_is_unique_impl<m_list<Ts...>, m_push_back<U, m_identity<T>>>> {
+};
+
+template <typename L, typename U>
+struct m_make_unique_impl {
+  using type = m_assign<L, m_transform<m_t_, U>>;
+};
+
+template <typename T, typename... Ts, typename U>
+struct m_make_unique_impl<m_list<T, Ts...>, U>
+  : m_make_unique_impl<m_list<Ts...>, m_if<m_base_of<m_identity<T>, U>, U, m_push_back<U, m_identity<T>>>> {
+};
+
+}  // namespace detail
+
+template <typename L>
+using m_is_unique = m_t_<detail::m_is_unique_impl<L, m_inherit<>>>;
+
+template <typename L>
+using m_make_unique = m_t_<detail::m_make_unique_impl<L, m_inherit<>>>;
+
 // Algorithms end ------------------------------------------------------------------------
 
 // Bind begin ----------------------------------------------------------------------------
@@ -874,9 +910,6 @@ struct m_map_key_value {
   using value = L;
 };
 
-template <typename Base, typename Derived>
-using m_base_of = std::is_base_of<Base, Derived>;
-
 template <typename... Ts>
 struct m_map_impl : m_inherit<m_identity<m_first<Ts>>...>, detail::m_map_key_value<m_first<Ts>, m_pop_front<Ts>>... {
   using keys = m_list<m_identity<m_first<Ts>>...>;
@@ -918,7 +951,7 @@ template <typename... Ts>
 using m_map = m_t_<detail::m_map_impl<Ts...>>;
 
 template <typename Map, typename Key>
-using m_map_contains = detail::m_base_of<m_identity<Key>, m_assign<m_inherit<>, typename Map::keys>>;
+using m_map_contains = m_base_of<m_identity<Key>, m_assign<m_inherit<>, typename Map::keys>>;
 
 template <typename Map, typename Key, typename... Values>
 using m_map_insert = m_eval_unless<m_map_contains<Map, Key>, Map, m_push_back, Map, m_list<Key, Values...>>;

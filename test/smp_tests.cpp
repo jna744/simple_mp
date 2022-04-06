@@ -25,4 +25,7 @@ int main()
   using Map4 = m_map_replace<Map3, int>;
 
   std::cout << m_type_name<Map4>() << std::endl;
+  int x = 5;
+  m_table_invoke<10>(5, [&x](auto I) { x = 10; });
+  std::cout << x << std::endl;
 }

@@ -1095,7 +1095,7 @@ template <std::size_t I, typename Function, typename Return, typename... Args>
 struct m_table_fn_wrap {
   static constexpr Return invoke(Function function, Args... args)
   {
-    return Function{std::move(function)}(m_size_t<I>{}, std::forward<Args>(args)...);
+    return std::forward<Function&&>(function)(m_size_t<I>{}, std::forward<Args>(args)...);
   }
 };
 
@@ -1119,7 +1119,7 @@ struct m_construct_fn_table {
 template <std::size_t Size, typename Function, typename... Args>
 inline constexpr decltype(auto) m_table_invoke(std::size_t index, Function&& function, Args&&... args)
 {
-  constexpr auto& table = detail::m_construct_fn_table<Size, Function, Args&&...>::value.table;
+  constexpr auto& table = detail::m_construct_fn_table<Size, Function&&, Args&&...>::value.table;
   return table[index](std::forward<Function>(function), std::forward<Args>(args)...);
 }
 

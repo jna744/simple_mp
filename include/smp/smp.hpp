@@ -382,6 +382,22 @@ struct m_inherit : Ts... {
 template <typename T>
 auto m_declval() -> std::add_rvalue_reference_t<T>;
 
+template <std::size_t I>
+struct m_tag_c : m_tag_c<I - 1> {
+};
+
+template <>
+struct m_tag_c<0> {
+};
+
+template <typename I>
+struct m_tag : m_tag<m_size_t<I::value - 1>> {
+};
+
+template <>
+struct m_tag<m_size_t<0>> {
+};
+
 namespace detail
 {
 

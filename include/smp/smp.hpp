@@ -380,7 +380,7 @@ struct m_inherit : Ts... {
 };
 
 template <typename T>
-auto m_declval() -> std::add_rvalue_reference_t<T>;
+auto m_declval() noexcept -> std::add_rvalue_reference_t<T>;
 
 template <std::size_t I>
 struct m_tag_c : m_tag_c<I - 1> {

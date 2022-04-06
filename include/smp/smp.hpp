@@ -825,7 +825,7 @@ using m_eval_bind_arg = typename m_eval_bind_arg_impl<Arg, L>::type;
 template <template <typename...> class Fn, typename... Args>
 struct m_bind {
   template <typename... Us>
-  using invoke = Fn<detail::m_eval_bind_arg<Args, m_list<Us...>>...>;
+  using invoke = m_apply<Fn, m_list<detail::m_eval_bind_arg<Args, m_list<Us...>>...>>;
 };
 
 template <typename Q, typename... Args>
@@ -834,7 +834,7 @@ using m_bind_q = m_bind<Q::template invoke, Args...>;
 template <template <typename...> class Fn, typename... Args>
 struct m_bind_front {
   template <typename... Us>
-  using invoke = Fn<Args..., Us...>;
+  using invoke = m_apply<Fn, m_list<Args..., Us...>>;
 };
 
 template <typename Q, typename... Args>
@@ -843,7 +843,7 @@ using m_bind_front_q = m_bind_front<Q::template invoke, Args...>;
 template <template <typename...> class Fn, typename... Args>
 struct m_bind_back {
   template <typename... Us>
-  using invoke = Fn<Us..., Args...>;
+  using invoke = m_apply<Fn, m_list<Us..., Args...>>;
 };
 
 template <typename Q, typename... Args>
@@ -898,6 +898,12 @@ struct m_map_get_impl {
   using type = decltype(value<Key>(static_cast<Map const*>(0)));
 };
 
+template <typename KVP, typename Key>
+using m_map_same_key = m_same<m_first<KVP>, Key>;
+
+template <typename Map, typename KVP>
+using m_map_update = m_transform_if_q<m_bind_back<m_map_same_key, m_first<KVP>>, m_bind_back<m_assign, KVP>, Map>;
+
 }  // namespace detail
 
 template <typename>
@@ -918,7 +924,10 @@ template <typename Map, typename Key, typename... Values>
 using m_map_insert = m_eval_unless<m_map_contains<Map, Key>, Map, m_push_back, Map, m_list<Key, Values...>>;
 
 template <typename Map, typename Key, typename... Values>
-using m_map_replace = m_eval_unless<m_map_contains<Map, Key>, Map, m_push_back, Map, m_list<Key, Values...>>;
+using m_map_replace = m_t_<m_if<
+    m_map_contains<Map, Key>,
+    m_defer<detail::m_map_update, Map, m_list<Key, Values...>>,
+    m_defer<m_push_back, Map, m_list<Key, Values...>>>>;
 
 template <typename Map, typename Key>
 using m_map_get = m_t_<detail::m_map_get_impl<Map, Key>>;

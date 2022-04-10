@@ -1,5 +1,5 @@
-#ifndef SMP_HPP
-#define SMP_HPP
+#ifndef SIMPLE_MP_HPP
+#define SIMPLE_MP_HPP
 
 #include <type_traits>
 #include <utility>
@@ -36,7 +36,10 @@
 
 #define SMP_INLINE(cpp_version) SMP_INLINE_##cpp_version
 
-namespace smp
+namespace simple
+{
+
+namespace mp
 {
 
 template <typename T>
@@ -1206,7 +1209,9 @@ inline constexpr decltype(auto) m_vtable_invoke(std::size_t index, Function&& fu
 
 // Function table end --------------------------------------------------------------------
 
-}  // namespace smp
+}  // namespace mp
+
+}  // namespace simple
 
 #undef SMP_CPP_VERSION
 #undef SMP_LIKELY__

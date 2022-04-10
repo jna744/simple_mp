@@ -10,7 +10,7 @@
 #define SMP_CPP_VERSION 14
 #else
 // TODO: not portable
-#warning "smp requires at least c++14"
+#warning "simple::mp requires at least c++14"
 #endif
 
 #if defined __GNUC__

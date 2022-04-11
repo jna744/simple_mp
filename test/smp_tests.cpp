@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <simple/mp.hpp>
+#include <simple/mp/type_name.hpp>
 
 using namespace simple::mp;
 
@@ -25,7 +26,7 @@ int main()
   std::cout << m_type_name<IsUnique>() << std::endl;
   std::cout << m_type_name<L1U>() << std::endl;
 
-  m_vtable_invoke<10>(5, [](auto I) {});
+  m_invoke_with_index<10>(5, [](auto I) {});
 
   static_assert(m_count<L1, int>::value == 3, "");
 }

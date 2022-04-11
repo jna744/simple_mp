@@ -669,6 +669,115 @@ using m_min_c = m_min<m_size_t<Is>...>;
 
 // Helper functions end  -----------------------------------------------------------------
 
+// Algorithms fwd ------------------------------------------------------------------------
+
+namespace detail
+{
+
+template <typename, typename>
+struct m_at_impl;
+
+}  // namespace detail
+
+template <typename L, typename I>
+using m_at = m_t_<detail::m_at_impl<I, L>>;
+
+template <typename L, std::size_t I>
+using m_at_c = m_t_<detail::m_at_impl<m_size_t<I>, L>>;
+
+// ---------------------------------------------------------------------------------------
+
+// Bind begin ----------------------------------------------------------------------------
+
+template <std::size_t N>
+struct m_arg {
+  template <typename L>
+  using type = m_at_c<L, N>;
+};
+
+template <template <typename...> class Fn, typename... Args>
+struct m_bind;
+
+namespace detail
+{
+
+template <typename>
+struct m_is_arg : m_false {
+};
+
+template <std::size_t I>
+struct m_is_arg<m_arg<I>> : m_true {
+};
+
+template <typename>
+struct m_is_bound : m_false {
+};
+
+template <template <typename...> class Fn, typename... Args>
+struct m_is_bound<m_bind<Fn, Args...>> : m_true {
+};
+
+template <typename Arg, typename L, typename = void>
+struct m_eval_bind_arg_impl {
+  using type = Arg;
+};
+
+template <typename Arg, typename L>
+struct m_eval_bind_arg_impl<Arg, L, m_if<m_is_arg<Arg>, void>> {
+  using type = typename Arg::template type<L>;
+};
+
+template <typename Arg, typename L>
+struct m_eval_bind_arg_impl<Arg, L, m_if<m_is_bound<Arg>, void>> {
+  using type = m_apply<m_invoke_q, m_push_front<L, Arg>>;
+};
+
+template <typename Arg, typename L>
+using m_eval_bind_arg = typename m_eval_bind_arg_impl<Arg, L>::type;
+
+}  // namespace detail
+
+template <template <typename...> class Fn, typename... Args>
+struct m_bind {
+  template <typename... Us>
+  using invoke = m_apply<Fn, m_list<detail::m_eval_bind_arg<Args, m_list<Us...>>...>>;
+};
+
+template <typename Q, typename... Args>
+using m_bind_q = m_bind<Q::template invoke, Args...>;
+
+template <template <typename...> class Fn, typename... Args>
+struct m_bind_front {
+  template <typename... Us>
+  using invoke = m_apply<Fn, m_list<Args..., Us...>>;
+};
+
+template <typename Q, typename... Args>
+using m_bind_front_q = m_bind_front<Q::template invoke, Args...>;
+
+template <template <typename...> class Fn, typename... Args>
+struct m_bind_back {
+  template <typename... Us>
+  using invoke = m_apply<Fn, m_list<Us..., Args...>>;
+};
+
+template <typename Q, typename... Args>
+using m_bind_back_q = m_bind_back<Q::template invoke, Args...>;
+
+inline namespace placeholders
+{
+
+using _1 = m_arg<0>;
+using _2 = m_arg<1>;
+using _3 = m_arg<2>;
+using _4 = m_arg<3>;
+using _5 = m_arg<4>;
+using _6 = m_arg<5>;
+
+}  // namespace placeholders
+
+// Bind end ------------------------------------------------------------------------------
+
 // Algorithms begin ----------------------------------------------------------------------
 
 namespace detail
@@ -741,12 +850,6 @@ struct m_find_impl<Fallback, I, If, L<U, Ts...>>
   : m_if<If<U>, m_identity<m_size_t<I>>, m_find_impl<Fallback, I + 1, If, L<Ts...>>> {
 };
 
-template <typename T>
-struct m_is_same_as {
-  template <typename U, typename...>
-  using invoke = m_same<T, U>;
-};
-
 }  // namespace detail
 
 template <typename L, template <typename...> class C>
@@ -756,7 +859,33 @@ template <typename L, typename Q>
 using m_find_if_q = m_find_if<L, Q::template invoke>;
 
 template <typename L, typename T>
-using m_find = m_find_if_q<L, detail::m_is_same_as<T>>;
+using m_find = m_find_if_q<L, m_bind_front<m_same, T>>;
+
+namespace detail
+{
+
+template <std::size_t N, template <typename...> class C, typename L>
+struct m_count_impl;
+
+template <std::size_t N, template <typename...> class C, template <typename...> class L, typename T, typename... Ts>
+struct m_count_impl<N, C, L<T, Ts...>>
+  : m_if<m_to_bool<C<T>>, m_count_impl<N + 1, C, L<Ts...>>, m_count_impl<N, C, L<Ts...>>> {
+};
+
+template <std::size_t N, template <typename...> class C, template <typename...> class L>
+struct m_count_impl<N, C, L<>> : m_size_t<N> {
+};
+
+}  // namespace detail
+
+template <typename L, template <typename...> class C>
+using m_count_if = m_t_<detail::m_count_impl<0, C, L>>;
+
+template <typename L, typename Q>
+using m_count_if_q = m_t_<detail::m_count_impl<0, Q::template invoke, L>>;
+
+template <typename L, typename V>
+using m_count = m_count_if_q<L, m_bind_front<m_same, V>>;
 
 namespace detail
 {
@@ -861,97 +990,6 @@ template <typename L>
 using m_make_unique = m_t_<detail::m_make_unique_impl<L, m_inherit<>>>;
 
 // Algorithms end ------------------------------------------------------------------------
-
-// Bind begin ----------------------------------------------------------------------------
-
-template <std::size_t N>
-struct m_arg {
-  template <typename L>
-  using type = m_at_c<L, N>;
-};
-
-template <template <typename...> class Fn, typename... Args>
-struct m_bind;
-
-namespace detail
-{
-
-template <typename>
-struct m_is_arg : m_false {
-};
-
-template <std::size_t I>
-struct m_is_arg<m_arg<I>> : m_true {
-};
-
-template <typename>
-struct m_is_bound : m_false {
-};
-
-template <template <typename...> class Fn, typename... Args>
-struct m_is_bound<m_bind<Fn, Args...>> : m_true {
-};
-
-template <typename Arg, typename L, typename = void>
-struct m_eval_bind_arg_impl {
-  using type = Arg;
-};
-
-template <typename Arg, typename L>
-struct m_eval_bind_arg_impl<Arg, L, m_if<m_is_arg<Arg>, void>> {
-  using type = typename Arg::template type<L>;
-};
-
-template <typename Arg, typename L>
-struct m_eval_bind_arg_impl<Arg, L, m_if<m_is_bound<Arg>, void>> {
-  using type = m_apply<m_invoke_q, m_push_front<L, Arg>>;
-};
-
-template <typename Arg, typename L>
-using m_eval_bind_arg = typename m_eval_bind_arg_impl<Arg, L>::type;
-
-}  // namespace detail
-
-template <template <typename...> class Fn, typename... Args>
-struct m_bind {
-  template <typename... Us>
-  using invoke = m_apply<Fn, m_list<detail::m_eval_bind_arg<Args, m_list<Us...>>...>>;
-};
-
-template <typename Q, typename... Args>
-using m_bind_q = m_bind<Q::template invoke, Args...>;
-
-template <template <typename...> class Fn, typename... Args>
-struct m_bind_front {
-  template <typename... Us>
-  using invoke = m_apply<Fn, m_list<Args..., Us...>>;
-};
-
-template <typename Q, typename... Args>
-using m_bind_front_q = m_bind_front<Q::template invoke, Args...>;
-
-template <template <typename...> class Fn, typename... Args>
-struct m_bind_back {
-  template <typename... Us>
-  using invoke = m_apply<Fn, m_list<Us..., Args...>>;
-};
-
-template <typename Q, typename... Args>
-using m_bind_back_q = m_bind_back<Q::template invoke, Args...>;
-
-inline namespace placeholders
-{
-
-using _1 = m_arg<0>;
-using _2 = m_arg<1>;
-using _3 = m_arg<2>;
-using _4 = m_arg<3>;
-using _5 = m_arg<4>;
-using _6 = m_arg<5>;
-
-}  // namespace placeholders
-
-// Bind end ------------------------------------------------------------------------------
 
 // Map begin -----------------------------------------------------------------------------
 

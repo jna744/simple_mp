@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <smp/smp.hpp>
+#include <simple/mp.hpp>
 
-using namespace smp;
+using namespace simple::mp;
 
 using L1 = std::tuple<void, int, float, void, int>;
 using L2 = std::tuple<char[1], char[2], char[3], char[4], char[5]>;
@@ -26,4 +26,6 @@ int main()
   std::cout << m_type_name<L1U>() << std::endl;
 
   m_vtable_invoke<10>(5, [](auto I) {});
+
+  static_assert(m_count<L1, int>::value == 3, "");
 }

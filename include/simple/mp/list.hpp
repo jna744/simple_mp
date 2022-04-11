@@ -25,13 +25,21 @@ struct m_list {
 template <typename T, T... ts>
 using m_list_c = m_list<m_integral<T, ts>...>;
 
+namespace detail
+{
+
 template <typename L>
-struct m_size : m_size_t<0> {
+struct m_size_impl : m_size_t<0> {
 };
 
 template <template <typename...> class L, typename... Ts>
-struct m_size<L<Ts...>> : m_size_t<sizeof...(Ts)> {
+struct m_size_impl<L<Ts...>> : m_size_t<sizeof...(Ts)> {
 };
+
+}  // namespace detail
+
+template <typename L>
+using m_size = m_t_<detail::m_size_impl<L>>;
 
 template <typename L>
 using m_empty = m_bool<m_size<L>{} == 0>;

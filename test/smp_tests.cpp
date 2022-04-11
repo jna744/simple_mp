@@ -15,8 +15,18 @@ using second = T2;
 
 using R1 = m_transform_if<first_is_void, second, L1, L2>;
 
+struct S {
+};
+
+using L3 = std::tuple<S, S>;
+
 int main()
 {
+  using I = m_find<L3, int>;
+  using I2 = m_same<I, m_size<L3>>;
+
+  using C = m_contains<L3, int>;
+  static_assert(!C::value, "");
 
   using L1 = m_list<int, double, int, int, float, double>;
   using L1U = m_make_unique<L1>;

@@ -115,13 +115,16 @@ struct m_count_impl<N, C, L<>> : m_size_t<N> {
 }  // namespace detail
 
 template <typename L, template <typename...> class C>
-using m_count_if = m_t_<detail::m_count_impl<0, C, L>>;
+using m_count_if = m_t_<detail::m_count_impl<0, C, m_assign<m_list<>, L>>>;
 
 template <typename L, typename Q>
-using m_count_if_q = m_t_<detail::m_count_impl<0, Q::template invoke, L>>;
+using m_count_if_q = m_count_if<L, Q::template invoke>;
 
 template <typename L, typename V>
 using m_count = m_count_if_q<L, m_bind_front<m_same, V>>;
+
+template <typename L, typename V>
+using m_contains = m_not<m_same<m_find<L, V>, m_size<L>>>;
 
 namespace detail
 {

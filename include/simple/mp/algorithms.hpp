@@ -229,13 +229,13 @@ template <typename L>
 using m_make_unique = m_t_<detail::m_make_unique_impl<L, m_inherit<>>>;
 
 template <typename L, template <typename...> class P>
-using m_all_of = m_apply<m_all, m_transform<P, L>>;
+using m_all_of = m_bool<m_count_if<L, P>{} == m_size<L>{}>;
 
 template <typename L, typename Qp>
 using m_all_of_q = m_all_of<L, Qp::template invoke>;
 
 template <typename L, template <typename...> class P>
-using m_any_of = m_apply<m_any, m_transform<P, L>>;
+using m_any_of = m_bool<(m_count_if<L, P>{} > 0)>;
 
 template <typename L, typename Qp>
 using m_any_of_q = m_any_of<L, Qp::template invoke>;

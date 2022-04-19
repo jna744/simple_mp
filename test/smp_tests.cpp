@@ -15,6 +15,9 @@ using second = T2;
 
 using R1 = m_transform_if<first_is_void, second, L1, L2>;
 
+template<typename T>
+using IsChar5 = std::is_same<T, char[5]>;
+
 struct S {
 };
 
@@ -38,5 +41,7 @@ int main()
 
   m_invoke_with_index<10>(5, [](auto I) {});
 
-  static_assert(m_count<L1, int>::value == 3, "");
+  using Result = m_any_of<L1, IsChar5>;
+
+  // static_assert(Result{}, "");
 }

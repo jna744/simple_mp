@@ -278,10 +278,26 @@ template <typename R, template <typename...> class L2, typename... Us, template 
 struct m_deep_flatten_impl<R, L<L2<Us...>, Ts...>> : m_deep_flatten_impl<R, L<Us..., Ts...>> {
 };
 
+template <typename R, typename, typename>
+struct m_flatten_impl {
+  using type = R;
+};
+
+template <typename R, template <typename...> class L1, template <typename...> class L2, typename T, typename... Ts>
+struct m_flatten_impl<R, L2<T, Ts...>, L1<>> : m_flatten_impl<m_push_back<R, T>, L2<Ts...>, L1<>> {
+};
+
+template <typename R, template <typename...> class L1, template <typename...> class L2, typename... Ts, typename... Us>
+struct m_flatten_impl<R, L2<L1<Us...>, Ts...>, L1<>> : m_flatten_impl<m_push_back<R, Us...>, L2<Ts...>, L1<>> {
+};
+
 }  // namespace detail
 
 template <typename L>
 using m_deep_flatten = m_t_<detail::m_deep_flatten_impl<m_clear<L>, L>>;
+
+template <typename L, typename L2 = m_clear<L>>
+using m_flatten = m_t_<detail::m_flatten_impl<m_clear<L>, L, L2>>;
 
 }  // namespace mp
 

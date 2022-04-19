@@ -3,7 +3,6 @@
 
 #include <simple/mp/detail/config.hpp>
 
-#include <simple/mp/algorithms.hpp>
 #include <simple/mp/list.hpp>
 #include <simple/mp/numeric_constants.hpp>
 #include <simple/mp/utility.hpp>
@@ -127,5 +126,7 @@ using _6 = m_arg<5>;
 }  // namespace mp
 
 }  // namespace simple
+
+#include <simple/mp/algorithms.hpp>
 
 #endif  // SIMPLE_MP_BIND_HPP

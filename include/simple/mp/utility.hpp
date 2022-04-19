@@ -180,7 +180,7 @@ using m_eval_or_q = m_eval_if_q<m_is_valid_q<Q, Args...>, T, Q, Args...>;
 
 template <template <typename...> class Fn, typename... Args>
 struct m_defer {
-  using type = Fn<Args...>;
+  using type = m_apply<Fn, m_list<Args...>>;
 };
 
 template <typename Q, typename... Args>

@@ -228,6 +228,24 @@ using m_is_unique = m_t_<detail::m_is_unique_impl<L, m_inherit<>>>;
 template <typename L>
 using m_make_unique = m_t_<detail::m_make_unique_impl<L, m_inherit<>>>;
 
+template <typename L, template <typename...> class P>
+using m_all_of = m_apply<m_all, m_transform<P, L>>;
+
+template <typename L, typename Qp>
+using m_all_of_q = m_all_of<L, Qp::template invoke>;
+
+template <typename L, template <typename...> class P>
+using m_any_of = m_apply<m_any, m_transform<P, L>>;
+
+template <typename L, typename Qp>
+using m_any_of_q = m_any_of<L, Qp::template invoke>;
+
+template <typename L, template <typename...> class P>
+using m_none_of = m_not<m_any_of<L, P>>;
+
+template <typename L, typename Qp>
+using m_none_of_q = m_none_of<L, Qp::template invoke>;
+
 }  // namespace mp
 
 }  // namespace simple

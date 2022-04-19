@@ -246,6 +246,22 @@ using m_none_of = m_not<m_any_of<L, P>>;
 template <typename L, typename Qp>
 using m_none_of_q = m_none_of<L, Qp::template invoke>;
 
+namespace detail
+{
+
+template <typename>
+struct m_from_seq_impl;
+
+template <typename T, T... ts>
+struct m_from_seq_impl<std::integer_sequence<T, ts...>> {
+  using type = m_list_c<T, ts...>;
+};
+
+}  // namespace detail
+
+template <typename Seq>
+using m_from_seq = m_t_<detail::m_from_seq_impl<Seq>>;
+
 }  // namespace mp
 
 }  // namespace simple

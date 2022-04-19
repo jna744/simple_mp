@@ -262,6 +262,27 @@ struct m_from_seq_impl<std::integer_sequence<T, ts...>> {
 template <typename Seq>
 using m_from_seq = m_t_<detail::m_from_seq_impl<Seq>>;
 
+namespace detail
+{
+
+template <typename R, typename>
+struct m_deep_flatten_impl {
+  using type = R;
+};
+
+template <typename R, template <typename...> class L, typename T, typename... Ts>
+struct m_deep_flatten_impl<R, L<T, Ts...>> : m_deep_flatten_impl<m_push_back<R, T>, L<Ts...>> {
+};
+
+template <typename R, template <typename...> class L2, typename... Us, template <typename...> class L, typename... Ts>
+struct m_deep_flatten_impl<R, L<L2<Us...>, Ts...>> : m_deep_flatten_impl<R, L<Us..., Ts...>> {
+};
+
+}  // namespace detail
+
+template <typename L>
+using m_deep_flatten = m_t_<detail::m_deep_flatten_impl<m_clear<L>, L>>;
+
 }  // namespace mp
 
 }  // namespace simple

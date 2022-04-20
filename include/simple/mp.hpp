@@ -3,7 +3,6 @@
 
 #include <simple/mp/algorithms.hpp>
 #include <simple/mp/bind.hpp>
-#include <simple/mp/invoke_with_index.hpp>
 #include <simple/mp/list.hpp>
 #include <simple/mp/numeric_constants.hpp>
 #include <simple/mp/utility.hpp>

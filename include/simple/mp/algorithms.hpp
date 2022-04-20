@@ -2,6 +2,7 @@
 #define SIMPLE_MP_ALGORITHMS_HPP
 
 #include <simple/mp/detail/config.hpp>
+#include <simple/mp/detail/m_at_impl.hpp>
 
 #include <simple/mp/bind.hpp>
 #include <simple/mp/list.hpp>
@@ -18,18 +19,6 @@ namespace mp
 
 namespace detail
 {
-
-template <typename, typename>
-struct m_at_impl;
-
-template <std::size_t I, template <typename...> class L, typename T, typename... Ts>
-struct m_at_impl<m_size_t<I>, L<T, Ts...>> : m_at_impl<m_size_t<I - 1>, L<Ts...>> {
-};
-
-template <typename T, template <typename...> class L, typename... Ts>
-struct m_at_impl<m_size_t<0>, L<T, Ts...>> {
-  using type = T;
-};
 
 template <std::size_t, typename, typename, typename = void>
 struct m_take_impl;
@@ -302,5 +291,8 @@ using m_flatten = m_t_<detail::m_flatten_impl<m_clear<L>, L, L2>>;
 }  // namespace mp
 
 }  // namespace simple
+
+#include <simple/mp/detail/m_indexed_invoke.hpp>
+#include <simple/mp/detail/m_indexed_vtable_invoke.hpp>
 
 #endif  // SIMPLE_MP_ALGORITHMS_HPP

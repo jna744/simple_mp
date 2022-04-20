@@ -2,6 +2,7 @@
 #define SIMPLE_MP_BIND_HPP
 
 #include <simple/mp/detail/config.hpp>
+#include <simple/mp/detail/m_at_impl.hpp>
 
 #include <simple/mp/list.hpp>
 #include <simple/mp/numeric_constants.hpp>
@@ -16,30 +17,10 @@ namespace mp
 template <typename T>
 using m_t_ = typename T::type;
 
-// Algorithms fwd ------------------------------------------------------------------------
-
-namespace detail
-{
-
-template <typename, typename>
-struct m_at_impl;
-
-}  // namespace detail
-
-template <typename L, typename I>
-using m_at = m_t_<detail::m_at_impl<I, L>>;
-
-template <typename L, std::size_t I>
-using m_at_c = m_t_<detail::m_at_impl<m_size_t<I>, L>>;
-
-// ---------------------------------------------------------------------------------------
-
-// Bind begin ----------------------------------------------------------------------------
-
 template <std::size_t N>
 struct m_arg {
   template <typename L>
-  using type = m_at_c<L, N>;
+  using type = m_t_<detail::m_at_impl<m_size_t<N>, L>>;
 };
 
 template <template <typename...> class Fn, typename... Args>
@@ -126,7 +107,5 @@ using _6 = m_arg<5>;
 }  // namespace mp
 
 }  // namespace simple
-
-#include <simple/mp/algorithms.hpp>
 
 #endif  // SIMPLE_MP_BIND_HPP

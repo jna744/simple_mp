@@ -1,13 +1,11 @@
-#ifndef SIMPLE_MP_INVOKE_WITH_INDEX_HPP
-#define SIMPLE_MP_INVOKE_WITH_INDEX_HPP
+#ifndef SIMPLE_MP_DETAIL_M_INDEXED_VTABLE_INVOKE_HPP
+#define SIMPLE_MP_DETAIL_M_INDEXED_VTABLE_INVOKE_HPP
 
-#include <simple/mp/detail/config.hpp>
-
-#include <simple/mp/algorithms.hpp>
 #include <simple/mp/bind.hpp>
+#include <simple/mp/detail/config.hpp>
 #include <simple/mp/numeric_constants.hpp>
-#include <simple/mp/utility.hpp>
 
+#include <type_traits>
 #include <utility>
 
 namespace simple
@@ -51,11 +49,12 @@ struct table_function {
 }  // namespace detail
 
 template <std::size_t Size, typename Function, typename... Args>
-inline constexpr decltype(auto) m_invoke_with_index_c(std::size_t index, Function&& function, Args&&... args)
+[[deprecated]] inline constexpr decltype(auto)
+m_indexed_vtable_invoke_c(std::size_t index, Function&& function, Args&&... args)
 {
   SMP_ASSERT(index < Size);
 
-  using ret_t = decltype(m_declval<Function>()(m_size_t<0>{}, m_declval<Args>()...));
+  using ret_t = decltype(std::declval<Function>()(m_size_t<0>{}, std::declval<Args>()...));
 
   using table_fn = m_bind_back<detail::table_function, Function, ret_t, Args...>;
 
@@ -67,9 +66,10 @@ inline constexpr decltype(auto) m_invoke_with_index_c(std::size_t index, Functio
 }
 
 template <typename S, typename Function, typename... Args>
-inline constexpr decltype(auto) m_invoke_with_index(std::size_t index, Function&& function, Args&&... args)
+[[deprecated]] inline constexpr decltype(auto)
+m_indexed_vtable_invoke(std::size_t index, Function&& function, Args&&... args)
 {
-  return m_invoke_with_index_c<std::size_t(S::value)>(
+  return m_indexed_vtable_invoke_c<std::size_t(S::value)>(
       index, std::forward<Function>(function), std::forward<Args>(args)...);
 }
 
@@ -77,4 +77,4 @@ inline constexpr decltype(auto) m_invoke_with_index(std::size_t index, Function&
 
 }  // namespace simple
 
-#endif  // SIMPLE_MP_INVOKE_WITH_INDEX_HPP
+#endif  // SIMPLE_MP_DETAIL_M_INDEXED_VTABLE_INVOKE_HPP

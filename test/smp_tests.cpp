@@ -23,5 +23,10 @@ int main()
   std::cout << "R2a: " << m_type_name<R2a>() << std::endl;
   std::cout << "R2b: " << m_type_name<R2b>() << std::endl;
   std::cout << "R3 " << m_type_name<R3>() << std::endl;
+  // m_indexed_vtable_invoke_c<10>(5, [](auto I) {});
+  m_indexed_invoke<10>(5, [](auto I) { std::cout << I.value << std::endl; });
 
+  constexpr auto ret = m_multi_indexed_invoke<10, 5, 2>(
+      std::make_tuple(1, 0, 1), [](auto I1, auto I2, auto I3) { return I1.value + I2.value + I3.value; });
+  std::cout << ret << std::endl;
 }
